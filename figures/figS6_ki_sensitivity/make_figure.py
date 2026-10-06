@@ -23,6 +23,7 @@ from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
+from matplotlib import font_manager
 import matplotlib.pyplot as plt      # noqa: E402
 import pandas as pd                  # noqa: E402
 
@@ -39,9 +40,62 @@ OUT = HERE / "output" / "figS6_ki_sensitivity.png"
 OUT.parent.mkdir(parents=True, exist_ok=True)
 
 INK, MUTED, GRID = "#0b0b0b", "#52514e", "#dddcd7"
+
+# Saved with a tight bounding box at 300 dpi, so the saved size is the printed
+# size and the point sizes below are the printed point sizes; audit_fonts()
+# checks every text item against the 8-12 pt that PLOS asks for inside a
+# figure. Subscripts and exponents in mathematical text (the subscript of
+# $K_{I}$, the power of ten in the x label and in the log-axis tick labels) are
+# drawn smaller than their text item.
+MIN_PT, MAX_PT = 8.0, 12.0
+
+
+# PLOS asks for Arial, Times or Symbol inside figures. Arial is not distributed
+# with this repository (see README), so require_arial() stops the script if
+# matplotlib cannot find it, rather than letting matplotlib substitute another
+# typeface. Mathematical text is set in Arial as well.
+def require_arial():
+    for style, weight in (("normal", "normal"), ("normal", "bold"),
+                          ("italic", "normal")):
+        prop = font_manager.FontProperties(family="Arial", style=style,
+                                           weight=weight)
+        path = font_manager.findfont(prop, fallback_to_default=False)
+        face = font_manager.get_font(path)
+        if (face.family_name != "Arial"
+                or ("Bold" in face.style_name) != (weight == "bold")
+                or ("Italic" in face.style_name) != (style == "italic")):
+            raise SystemExit(f"Arial ({style}, {weight}) not found; got {path}")
+
+
+require_arial()
+# Neither the sf nor the cal slot of mathematical text is drawn in these
+# figures. Both are pointed at Arial so that every slot names a font that is
+# present: left at its default, cal names a script typeface, and matplotlib
+# prints a fallback warning when it cannot find one.
+plt.rcParams.update({"font.family": "Arial", "mathtext.fontset": "custom",
+                     "mathtext.rm": "Arial", "mathtext.it": "Arial:italic",
+                     "mathtext.bf": "Arial:bold", "mathtext.sf": "Arial",
+                     "mathtext.cal": "Arial"})
+
+
+def audit_fonts(fig, name):
+    bad = set()
+    for t in fig.findobj(matplotlib.text.Text):
+        if not (t.get_text() or "").strip() or not t.get_visible():
+            continue
+        pt = round(t.get_fontsize(), 2)
+        if (pt < MIN_PT - 1e-6 or pt > MAX_PT + 1e-6
+                or t.get_fontname() != "Arial"):
+            bad.add((pt, t.get_fontname(), (t.get_text() or "")[:40].replace("\n", " ")))
+    if bad:
+        for pt, fam, s in sorted(bad):
+            print(f"    FONT VIOLATION {name}: {pt} pt  {fam}  {s!r}")
+        raise SystemExit(f"{name}: text outside {MIN_PT}-{MAX_PT} pt or not in Arial")
+
+
 SC = {"cuevas_dmso": ("DMSO arm", "#2a78d6"), "cuevas_cypa": ("CypA arm", "#eb6834")}
 plt.rcParams.update({"font.size": 8.5, "axes.labelsize": 8.5, "xtick.labelsize": 8,
-                     "ytick.labelsize": 8, "legend.fontsize": 7.5, "axes.titlesize": 9,
+                     "ytick.labelsize": 8, "legend.fontsize": 8, "axes.titlesize": 9,
                      "axes.edgecolor": MUTED, "axes.linewidth": 0.7,
                      "xtick.color": MUTED, "ytick.color": MUTED, "text.color": INK,
                      "axes.labelcolor": INK, "axes.spines.top": False,
@@ -81,8 +135,9 @@ b.set_ylabel("speedup from the RAS(ON) agent (×)")
 b.set_xlabel("$K_{I}$ (M); the dotted line is the value the model uses, "
              "$2.20\\times10^{-7}$ M")
 b.set_title("B  the speedup does not", loc="left", color=INK)
-b.text(6.5e-8, 1.53, "1.5-fold, the level this run was scored on", fontsize=7.5,
+b.text(6.5e-8, 1.53, "1.5-fold, the level this run was scored on", fontsize=8,
        color=MUTED)
 b.legend(frameon=False, loc="lower right", ncol=2)
+audit_fonts(fig, "S6 Text figure")
 fig.savefig(OUT, dpi=300, bbox_inches="tight")
 print("wrote", OUT)

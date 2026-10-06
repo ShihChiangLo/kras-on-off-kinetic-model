@@ -38,6 +38,17 @@ export BNGPATH=$(python3 -c "import bionetgen,os;print(os.path.dirname(bionetgen
 
 On Windows the same path is set with `set` or `$env:BNGPATH` instead.
 
+Every figure drawn here except S1 Fig is set in Arial, one of the typefaces
+PLOS asks for, and Arial is not distributed here. It ships with macOS and
+Windows; on Linux it has to be installed, for example from the Microsoft core
+fonts package, whose Arial is an older release than the one named under
+Reproducibility. If matplotlib was used on the machine before Arial was
+installed, delete its font cache (the `fontlist-*.json` file in the directory
+that `python3 -c "import matplotlib; print(matplotlib.get_cachedir())"` prints)
+so that it finds the new font. The plotting scripts of those figures stop with
+an error if they cannot find Arial, rather than drawing in another typeface.
+S1 Fig is set in DejaVu Sans, which comes with matplotlib.
+
 ## Draw the figures
 
 ```bash
@@ -47,9 +58,9 @@ python3 make_all_figures.py --only fig05
 ```
 
 Each figure is written to `figures/<figure>/output/`. With the package versions
-in `requirements.txt`, on Linux x86-64 with Python 3.11, every PNG is
-byte-identical to the file used in the article. On other platforms, anti-aliased
-edges can differ by a few pixels.
+in `requirements.txt` and the Arial files named under Reproducibility, on Linux
+x86-64 with Python 3.11, every PNG is byte-identical to the file used in the
+article. On other platforms, anti-aliased edges can differ by a few pixels.
 
 S1 Fig fits a one-reaction PySB model to each digitized hydrolysis trace, with a
 200-replicate bootstrap, and takes about five minutes. The other figures only
@@ -133,7 +144,7 @@ Re-running the simulation scripts reproduces every table in `data/` to the last
 digit, and redrawing then reproduces every PNG byte for byte. That was verified
 by deleting the tables and the figures and rebuilding both from the models.
 
-Two things that exactness depends on, stated because they are easy to break:
+Three things that exactness depends on, stated because they are easy to break:
 
 - The platform. Byte-identical output is a property of the code together with
   the package versions in `requirements.txt`, Python 3.11 and Linux x86-64.
@@ -141,6 +152,11 @@ Two things that exactness depends on, stated because they are easy to break:
   in a few anti-aliased pixels, and a different BLAS or libm build can move a
   stiff endpoint by about 10<sup>-8</sup> relative, which is the solver's own
   error tolerance.
+- The font. The PNGs used in the article were drawn with the Arial files that
+  ship with macOS: `Arial.ttf` and `Arial Bold.ttf` version 5.01, and
+  `Arial Italic.ttf` version 5.00. Another release of Arial can differ in glyph
+  outlines or spacing, and then the redrawn figures can differ from the
+  published ones in the pixels of their text.
 - Three tables are built from an intermediate table on disk rather than from
   the values in memory: `interval_edges.csv` and `on_dose_interval.csv`, both
   built from the re-read `dose_grid.csv` of Fig 9, and `ki_sensitivity.csv`,

@@ -155,7 +155,7 @@ def _time_axis(ax):
 def _on_axis(ax):
     ax.set_xscale("log")
     ax.set_xlim(8e-10, 1.3e-5)
-    ax.set_xlabel("ON drug (M)")
+    ax.set_xlabel("RAS(ON) inhibitor (M)")
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
 
@@ -193,11 +193,11 @@ def panel_b(ax, c, gdp_pct):
     ax.axhline(gdp_pct, color=C_GDP, lw=0.9, ls=":", zorder=1)
     on_hi = max(ON_B)
     for on, cond, col, ls, lab in [
-            (0.0, "full", C_OFF, "-", "OFF drug alone"),
+            (0.0, "full", C_OFF, "-", "RAS(OFF) alone"),
             (on_hi, "full", C_FULL, "-",
-             f"+ ON {molar(on_hi)}, measured {KCAT}"),
+             f"+ RAS(ON), measured {KCAT}"),
             (SHIELD_ON, "shield", C_SHIELD, "--",
-             f"+ ON {molar(SHIELD_ON)}, {KCAT} = 0")]:
+             f"+ RAS(ON), {KCAT} = 0")]:
         p = d[(d.on_M == on) & (d.cond == cond)].sort_values("t_s")
         ax.plot(p.t_s, p.captured_pct, ls, lw=1.4, color=col, label=lab,
                 zorder=3)
@@ -215,7 +215,7 @@ def panel_c(ax, c):
     for i, on in enumerate(ons):
         p = d[d.on_M == on].sort_values("t_s")
         col = C_OFF if on == 0.0 else cmap(0.12 + 0.72 * i / max(1, len(ons) - 1))
-        lab = "OFF drug alone" if on == 0.0 else f"+ ON {molar(on)}"
+        lab = "RAS(OFF) alone" if on == 0.0 else f"+ RAS(ON) {molar(on)}"
         ax.plot(p.t_s, p.captured_pct, "-", lw=1.3, color=col, label=lab,
                 zorder=3)
     ax.set_ylim(0, 103)

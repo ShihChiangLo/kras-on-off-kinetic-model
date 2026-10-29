@@ -66,6 +66,54 @@ S1 Fig fits a one-reaction PySB model to each digitized hydrolysis trace, with a
 200-replicate bootstrap, and takes about five minutes. The other figures only
 read their tables.
 
+### S1 Fig: which numbers are the reported ones
+
+The seven apparent hydrolysis rate constants reported in the article come from
+`figures/figS1_hydrolysis_fits/analytic_optimum.py`, not from the ODE fit in
+`make_figure.py`. The ODE fit is kept, and is run by `make_all_figures.py` as
+before, as an independent structural check on the closed-form solution.
+
+The model is a single irreversible first-order step with the phosphate baseline
+fixed at zero and a declared pool R<sub>0</sub>, so the observable is exactly
+Pi(t) = R<sub>0</sub> (1 &minus; exp(&minus;kt)) and the least-squares objective
+has an exact stationarity condition in one variable. `analytic_optimum.py`
+brackets and bisects that condition at 50 decimal digits. No solver tolerance
+and no integrator enters it, and `--verify-closed-form` evaluates the closed
+form against this repository's own PySB simulator at the fitted value and
+refuses to report if the two disagree.
+
+The two routes agree to between 2.6 &times; 10<sup>-8</sup> and
+2.3 &times; 10<sup>-5</sup> relative, variant by variant, which is far inside
+the reported 95 % confidence intervals, whose half-widths run from 2.0 % to
+6.1 % of the point estimate.
+The reason the reported values are taken from the closed form rather than from
+the ODE fit is narrower than that. The ODE objective is evaluated by an
+integrator, so the finite-difference gradient the optimiser sees carries
+integrator noise, so the value the fit returns depends on where it is started.
+Swept from half to twice the optimum, that dependence measures
+4 &times; 10<sup>-8</sup> to 4 &times; 10<sup>-3</sup> relative across the seven
+alleles. For KRAS G12A it is larger than the distance from the reported value to
+its third-significant-figure rounding boundary (3.4 &times; 10<sup>-4</sup>
+relative), so over that sweep the ODE fit returns values printing as 5.15, 5.16
+and 5.17 &times; 10<sup>-4</sup> s<sup>-1</sup>. Swept the same way, the closed
+form returns one three-significant-figure value for every one of the seven
+constants, and that is a property of the model rather than an observation: the
+stationarity condition has a single sign change over twelve decades in k, so any
+bracketing solver reaches the same root from any starting point. The published
+digits are the same either way; the closed form's are independent of where the
+solve begins and the ODE fit's are not.
+
+```bash
+cd figures/figS1_hydrolysis_fits
+python3 analytic_optimum.py --verify-closed-form --digit-scan
+python3 analytic_optimum.py --compare output/fitted_rate_constants.csv
+```
+
+`analytic_optimum.py` needs `mpmath`, which is listed in `requirements.txt`.
+Run with no arguments it reads `data/` beside itself and imports the data
+reader and the simulator from `make_figure.py`, so the closed form is checked
+against the same points and the same model the figure is drawn from.
+
 ## Re-run the simulations
 
 Every table under `figures/<figure>/data/` can be recomputed from the models in

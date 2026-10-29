@@ -9,10 +9,31 @@ a one-rule PySB model,
 so that Pi(t) = R0 (1 - exp(-k_hyd_app t)). The assay runs at a saturating
 CypA:inhibitor concentration, so binding and catalysis are lumped into the one
 apparent constant. R0, the hydrolysable RAS-GTP pool, is shared by all variants
-and fixed at 1.07 uM: the plateau of the G12D trace, the only trace that reaches
-its plateau within 90 min. The Pi baseline is fixed at 0, leaving k_hyd_app as the
-only free parameter per variant. Its 95 % interval comes from a residual-resampling
-bootstrap (200 replicates, fixed seed) and is conditional on the fixed R0.
+and fixed at 1.07 uM. G12D is the only trace that reaches its plateau inside the
+90-minute window, and 1.07 uM is the asymptote a free-R0 fit to it returns
+(1.0701 uM on the digitized trace in data/). It is NOT the reading of the plateau
+points themselves, whose last five run 1.076 to 1.086 uM. Fitting R0 and k
+together against the 181 points the publisher released as the source data behind
+the same figure returns R0 = 1.070235 uM, 0.022 % from the declared value, so two
+independent routes to R0 agree on it. That fit is a check on the declared
+constant and nothing more: the fit performed here takes the digitized trace in
+data/ as its input, not the publisher's source data.
+
+One consequence worth stating plainly: five of G12D's 21 digitized points lie
+above 1.07 uM, the highest at 1.0151 x R0. Pi(t) = R0 (1 - exp(-k t)) cannot
+reach them at any k, so that one trace is fitted against an asymptote it already
+exceeds and its k carries a small upward bias from the fixed pool. The other six
+alleles stay below 0.91 x R0 throughout, so none of them is affected. The Pi baseline is fixed at 0,
+leaving k_hyd_app as the only free parameter per variant. Its 95 % interval comes
+from a residual-resampling bootstrap (200 replicates, fixed seed) and is
+conditional on the fixed R0.
+
+The rate constants REPORTED in the article are not the ones this script prints.
+They come from analytic_optimum.py, which solves the same least-squares problem
+in closed form at 50 decimal digits; this script fits it with an ODE solver and
+is kept as an independent structural check on that solution. The two agree to
+between 2.6e-8 and 2.3e-5 relative. See the README section "S1 Fig: which numbers
+are the reported ones".
 
 The model runs in minutes and uM, the units of the source figure; rate constants
 are reported in s^-1.
